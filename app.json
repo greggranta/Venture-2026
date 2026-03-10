@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "Venture",
+    "slug": "venture-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0066FF"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.venture.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Venture uses your location to show nearby activity sessions.",
+        "NSLocationAlwaysUsageDescription": "Venture uses your location to show nearby activity sessions.",
+        "NSCameraUsageDescription": "Venture needs camera access to upload your profile photo.",
+        "NSPhotoLibraryUsageDescription": "Venture needs photo library access to upload your profile photo."
+      },
+      "googleServicesFile": "./GoogleService-Info.plist"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0066FF"
+      },
+      "package": "com.venture.app",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-location",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Venture to access your photos for profile pictures."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0066FF"
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      "sentry-expo"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}
