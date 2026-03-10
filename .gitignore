@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.expo/
+dist/
+
+# Env files
+.env
+.env.local
+
+# Lock files (optional: include if you want reproducible installs)
+# package-lock.json
+
+# Build artifacts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# Native build output
+android/
+ios/
+
+# Generated
+tsconfig.json
