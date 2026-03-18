@@ -9,13 +9,14 @@ import {
   Alert,
   TouchableOpacity,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import Button from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
-import { getSession, joinSession, cancelSession } from '../../api/sessions';
+import { getSession, joinSession, cancelSession, unjoinSession } from '../../api/sessions';
 import { getPhotoUrl } from '../../api/users';
 import { getCategoryEmoji, getCategoryName } from '../../utils/school';
 import { formatDateTime, formatDuration, getTimeDisplay, getUrgencyColor } from '../../utils/time';
@@ -27,6 +28,8 @@ export default function SessionDetailScreen({ route, navigation }) {
   const [session, setSession] = useState(initialSession);
   const [joining, setJoining] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [unjoining, setUnjoining] = useState(false);
+  const [loading, setLoading] = useState(!initialSession?.start_time);
 
   const isCreator = session.created_by === user?.id;
   const isAttendee = session.attendees?.some((a) => a.user_id === user?.id);
@@ -39,9 +42,11 @@ export default function SessionDetailScreen({ route, navigation }) {
   async function refreshSession() {
     try {
       const fresh = await getSession(session.id);
-      setSession(fresh);
+      if (fresh) setSession(fresh);
     } catch (error) {
       console.error('Error refreshing session:', error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -55,6 +60,31 @@ export default function SessionDetailScreen({ route, navigation }) {
     } finally {
       setJoining(false);
     }
+  }
+
+  async function handleUnjoin() {
+    Alert.alert(
+      'Leave Session',
+      'Are you sure you want to leave this session?',
+      [
+        { text: 'Stay', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            setUnjoining(true);
+            try {
+              await unjoinSession(session.id, user.id);
+              await refreshSession();
+            } catch (error) {
+              Alert.alert('Error', error.message || 'Failed to leave session.');
+            } finally {
+              setUnjoining(false);
+            }
+          },
+        },
+      ]
+    );
   }
 
   async function handleCancel() {
@@ -72,7 +102,7 @@ export default function SessionDetailScreen({ route, navigation }) {
               await cancelSession(session.id, user.id);
               navigation.goBack();
             } catch (error) {
-              Alert.alert('Error', 'Failed to cancel session.');
+              Alert.alert('Error', error.message || 'Failed to cancel session.');
             } finally {
               setCancelling(false);
             }
@@ -108,10 +138,11 @@ export default function SessionDetailScreen({ route, navigation }) {
     if (isAttendee) {
       return (
         <Button
-          title="YOU'RE GOING ✓"
-          variant="success"
+          title="Leave Session"
+          variant="danger"
           size="large"
-          disabled
+          onPress={handleUnjoin}
+          loading={unjoining}
         />
       );
     }
@@ -126,6 +157,16 @@ export default function SessionDetailScreen({ route, navigation }) {
         onPress={handleJoin}
         loading={joining}
       />
+    );
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.electricBlue} />
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -228,7 +269,9 @@ export default function SessionDetailScreen({ route, navigation }) {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Looking for</Text>
             <Text style={styles.lookingFor}>
-              {session.looking_for === 1
+              {session.looking_for == null
+                ? '—'
+                : session.looking_for === 1
                 ? '1 person'
                 : `${session.looking_for} people`}
             </Text>
@@ -273,6 +316,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
     padding: 16,

@@ -66,50 +66,54 @@ export async function submitRating({
  * Get pending ratings for a user (sessions that expired and need rating).
  */
 export async function getPendingRatings(userId) {
-  // Get expired sessions where user was a participant
+  const now = new Date().toISOString();
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  // Sessions the user created that have expired (not cancelled)
   const { data: createdSessions } = await supabase
     .from('sessions')
-    .select('*, attendees:session_attendees(user_id, users(id, name, photo_url, school))')
+    .select('*, attendees:session_attendees(user_id, users(id, name, photo_url, school, graduation_year))')
     .eq('created_by', userId)
-    .eq('status', 'expired')
-    .gt('expires_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // last 24hrs
+    .neq('status', 'cancelled')
+    .lt('expires_at', now)
+    .gt('expires_at', cutoff);
 
-  const { data: joinedSessions } = await supabase
+  // Session IDs the user attended as a non-creator
+  const { data: attendedRows } = await supabase
     .from('session_attendees')
-    .select('session:sessions(*, creator:users!created_by(id, name, photo_url, school))')
-    .eq('user_id', userId)
-    .eq('sessions.status', 'expired')
-    .gt('sessions.expires_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    .select('session_id')
+    .eq('user_id', userId);
+
+  const attendedIds = (attendedRows || []).map((r) => r.session_id);
+
+  let joinedSessions = [];
+  if (attendedIds.length > 0) {
+    const { data } = await supabase
+      .from('sessions')
+      .select('*, creator:users!created_by(id, name, photo_url, school, graduation_year)')
+      .in('id', attendedIds)
+      .neq('status', 'cancelled')
+      .lt('expires_at', now)
+      .gt('expires_at', cutoff);
+    joinedSessions = data || [];
+  }
 
   const pending = [];
 
-  // Check which ones still need rating
   for (const session of (createdSessions || [])) {
     for (const attendee of (session.attendees || [])) {
       if (attendee.user_id === userId) continue;
       const hasRated = await hasUserRated(userId, attendee.user_id, session.id);
       if (!hasRated) {
-        pending.push({
-          session,
-          rateeId: attendee.user_id,
-          ratee: attendee.users,
-          isCreator: true,
-        });
+        pending.push({ session, rateeId: attendee.user_id, ratee: attendee.users });
       }
     }
   }
 
-  for (const j of (joinedSessions || [])) {
-    const session = j.session;
-    if (!session) continue;
+  for (const session of joinedSessions) {
     const hasRated = await hasUserRated(userId, session.created_by, session.id);
     if (!hasRated) {
-      pending.push({
-        session,
-        rateeId: session.created_by,
-        ratee: session.creator,
-        isCreator: false,
-      });
+      pending.push({ session, rateeId: session.created_by, ratee: session.creator });
     }
   }
 
@@ -126,7 +130,7 @@ export async function hasUserRated(raterId, rateeId, sessionId) {
     .eq('session_id', sessionId)
     .eq('rater_id', raterId)
     .eq('ratee_id', rateeId)
-    .single();
+    .maybeSingle();
 
   return !!data;
 }

@@ -19,6 +19,9 @@ export function AuthProvider({ children }) {
       } else {
         setLoading(false);
       }
+    }).catch((error) => {
+      console.error('Error getting session:', error);
+      setLoading(false);
     });
 
     // Listen for auth state changes
@@ -58,7 +61,13 @@ export function AuthProvider({ children }) {
   async function signInWithOtp(email) {
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        // Omitting emailRedirectTo forces Supabase to send a 6-digit OTP
+        // code instead of a magic link. Also ensure the Supabase dashboard
+        // email template uses {{ .Token }} not {{ .ConfirmationURL }}.
+        emailRedirectTo: undefined,
+      },
     });
     return { data, error };
   }

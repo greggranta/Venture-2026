@@ -18,6 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getUserProfile, getPhotoUrl } from '../../api/users';
 import { getCategoryEmoji } from '../../utils/school';
 import { formatDateTime } from '../../utils/time';
+import { getLevelInfo } from '../../utils/levels';
 
 export default function ProfileScreen({ route, navigation }) {
   // If viewing another user's profile, userId is passed; otherwise show own
@@ -74,6 +75,7 @@ export default function ProfileScreen({ route, navigation }) {
   const photoUrl = getPhotoUrl(profileData.photo_url);
   const vibeScore = profileData.vibe_score;
   const activities = profileData.activity_counts || { gym: 0, coffee: 0, study: 0 };
+  const levelInfo = getLevelInfo(profileData.token_balance);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -106,14 +108,29 @@ export default function ProfileScreen({ route, navigation }) {
         {/* Avatar + name */}
         <View style={styles.avatarSection}>
           {photoUrl ? (
-            <Image source={{ uri: photoUrl }} style={styles.avatar} />
+            <Image
+              source={{ uri: photoUrl }}
+              style={[styles.avatar, { borderColor: levelInfo.color }]}
+            />
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <View style={[styles.avatar, styles.avatarPlaceholder, { borderColor: levelInfo.color }]}>
               <Text style={styles.avatarInitial}>{profileData.name?.charAt(0) || '?'}</Text>
             </View>
           )}
           <Text style={styles.name}>{isOwnProfile ? 'You' : profileData.name}</Text>
           <Text style={styles.schoolBadge}>✓ {profileData.school} '{String(profileData.graduation_year || '').slice(-2)}</Text>
+
+          {/* Level badge */}
+          <TouchableOpacity
+            style={[styles.levelBadge, { backgroundColor: levelInfo.color + '18', borderColor: levelInfo.color }]}
+            onPress={() => navigation.navigate('LevelsInfo')}
+            activeOpacity={0.7}>
+            <Text style={styles.levelBadgeEmoji}>{levelInfo.badge}</Text>
+            <Text style={[styles.levelBadgeText, { color: levelInfo.color }]}>
+              Level {levelInfo.level} · {levelInfo.name}
+            </Text>
+            <Text style={[styles.levelBadgeInfo, { color: levelInfo.color }]}>ⓘ</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Stats row */}
@@ -270,6 +287,28 @@ const styles = StyleSheet.create({
     ...Typography.bodySmall,
     color: Colors.electricBlue,
     fontFamily: 'Inter-SemiBold',
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  levelBadgeEmoji: {
+    fontSize: 14,
+  },
+  levelBadgeText: {
+    ...Typography.bodySmall,
+    fontFamily: 'Inter-SemiBold',
+  },
+  levelBadgeInfo: {
+    fontSize: 13,
+    fontFamily: 'Inter-SemiBold',
+    opacity: 0.7,
   },
   statsRow: {
     flexDirection: 'row',

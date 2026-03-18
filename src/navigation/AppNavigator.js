@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View } from 'react-native';
+import { Text, View, Modal } from 'react-native';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { Colors } from '../constants/colors';
+import { getPendingRatings } from '../api/ratings';
 
 // Auth screens
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
@@ -20,6 +21,7 @@ import PostSessionScreen from '../screens/post/PostSessionScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import LevelsInfoScreen from '../screens/profile/LevelsInfoScreen';
 import RatingScreen from '../screens/rating/RatingScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 
@@ -139,6 +141,7 @@ function FeedStack() {
       <Stack.Screen name="PostSession" component={PostSessionScreen} />
       <Stack.Screen name="Rating" component={RatingScreen} />
       <Stack.Screen name="UserProfile" component={ProfileScreen} />
+      <Stack.Screen name="LevelsInfo" component={LevelsInfoScreen} />
     </Stack.Navigator>
   );
 }
@@ -148,6 +151,7 @@ function ProfileStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="LevelsInfo" component={LevelsInfoScreen} />
     </Stack.Navigator>
   );
 }
@@ -159,6 +163,45 @@ function AuthStack() {
       <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
       <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
     </Stack.Navigator>
+  );
+}
+
+function AuthenticatedRoot() {
+  const { user } = useAuth();
+  const [pendingRatings, setPendingRatings] = useState([]);
+  const [ratingIndex, setRatingIndex] = useState(0);
+
+  useEffect(() => {
+    if (user?.id) {
+      getPendingRatings(user.id)
+        .then(setPendingRatings)
+        .catch(() => {});
+    }
+  }, [user?.id]);
+
+  const currentRating = pendingRatings[ratingIndex];
+
+  function advanceRating() {
+    if (ratingIndex + 1 < pendingRatings.length) {
+      setRatingIndex((i) => i + 1);
+    } else {
+      setPendingRatings([]);
+      setRatingIndex(0);
+    }
+  }
+
+  return (
+    <>
+      <MainTabs />
+      <Modal visible={!!currentRating} animationType="slide" presentationStyle="pageSheet">
+        {currentRating && (
+          <RatingScreen
+            route={{ params: currentRating }}
+            navigation={{ goBack: advanceRating, popToTop: advanceRating }}
+          />
+        )}
+      </Modal>
+    </>
   );
 }
 
@@ -176,5 +219,5 @@ export default function AppNavigator() {
     );
   }
 
-  return <MainTabs />;
+  return <AuthenticatedRoot />;
 }

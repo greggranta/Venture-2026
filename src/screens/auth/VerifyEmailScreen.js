@@ -16,11 +16,11 @@ import { Typography } from '../../constants/typography';
 import Button from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
 
-const CODE_LENGTH = 6;
+const CODE_LENGTH = 8;
 
 export default function VerifyEmailScreen({ route, navigation }) {
   const { email } = route.params;
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [code, setCode] = useState(['', '', '', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const inputRefs = useRef([]);
@@ -88,7 +88,7 @@ export default function VerifyEmailScreen({ route, navigation }) {
         <View style={styles.header}>
           <Text style={styles.title}>Check your email</Text>
           <Text style={styles.subtitle}>
-            We sent a 6-digit code to:
+            We sent an 8-digit code to:
           </Text>
           <Text style={styles.emailText}>{email}</Text>
         </View>
@@ -170,8 +170,8 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   codeInput: {
-    width: 46,
-    height: 56,
+    width: 38,
+    height: 50,
     borderWidth: 1.5,
     borderColor: Colors.borderGray,
     borderRadius: 10,

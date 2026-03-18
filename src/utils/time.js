@@ -6,8 +6,10 @@ import { UrgencyColors } from '../constants/colors';
  * @returns {string}
  */
 export function getTimeDisplay(startTime) {
+  if (!startTime) return '';
   const now = new Date();
   const start = new Date(startTime);
+  if (isNaN(start.getTime())) return '';
   const diffMs = start - now;
   const diffMinutes = Math.floor(diffMs / 60000);
 
@@ -60,7 +62,9 @@ export function isUrgent(startTime) {
  * @returns {string}
  */
 export function formatDateTime(dateTime) {
+  if (!dateTime) return 'Time TBD';
   const date = new Date(dateTime);
+  if (isNaN(date.getTime())) return 'Time TBD';
   const now = new Date();
 
   const isToday = date.toDateString() === now.toDateString();
@@ -90,6 +94,7 @@ export function formatDateTime(dateTime) {
  * @returns {string}
  */
 export function formatDuration(minutes) {
+  if (minutes == null || isNaN(minutes)) return '';
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   const remainingMins = minutes % 60;

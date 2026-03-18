@@ -17,7 +17,9 @@ export function detectSchool(email) {
  * @returns {boolean}
  */
 export function isEduEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.edu$/i.test(email);
+  // TODO: Re-enable .edu validation before launch
+  // return /^[^\s@]+@[^\s@]+\.edu$/i.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email); // DEV: accepts any valid email
 }
 
 /**
@@ -71,5 +73,5 @@ export function getCategoryName(category) {
     coffee: 'COFFEE & CHILL',
     study: 'STUDY SESSION',
   };
-  return names[category] || category.toUpperCase();
+  return names[category] || (category ? category.toUpperCase() : 'SESSION');
 }

@@ -63,12 +63,12 @@ export default function WelcomeScreen({ navigation }) {
 
         {/* Email form */}
         <View style={styles.form}>
-          <Text style={styles.formLabel}>Enter your .edu email</Text>
+          <Text style={styles.formLabel}>Enter your email {/* DEV: .edu check disabled */}</Text>
           <TextInput
             style={[styles.input, email.length > 0 && !isValidEmail && styles.inputError]}
             value={email}
             onChangeText={setEmail}
-            placeholder="you@university.edu"
+            placeholder="you@gmail.com"
             placeholderTextColor={Colors.mediumGray}
             keyboardType="email-address"
             autoCapitalize="none"
