@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   header: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   section: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: Colors.borderGray,

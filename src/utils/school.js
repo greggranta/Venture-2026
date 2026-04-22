@@ -17,9 +17,9 @@ export function detectSchool(email) {
  * @returns {boolean}
  */
 export function isEduEmail(email) {
-  // TODO: Re-enable .edu validation before launch
-  // return /^[^\s@]+@[^\s@]+\.edu$/i.test(email);
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email); // DEV: accepts any valid email
+  const testAccounts = ['gregga.grant@gmail.com', 'gregga.grant24@gmail.com', 'reviewer@colum.edu'];
+  if (testAccounts.includes(email.toLowerCase())) return true;
+  return /^[^\s@]+@[^\s@]+\.edu$/i.test(email);
 }
 
 /**

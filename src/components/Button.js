@@ -43,7 +43,7 @@ export default function Button({
       accessibilityState={{ disabled: isDisabled }}>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? Colors.white : Colors.electricBlue}
+          color={variant === 'primary' ? Colors.background : Colors.freshGreen}
           size="small"
         />
       ) : (
@@ -60,12 +60,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primary: {
-    backgroundColor: Colors.electricBlue,
+    backgroundColor: Colors.freshGreen,
   },
   secondary: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: Colors.electricBlue,
+    borderColor: Colors.freshGreen,
   },
   success: {
     backgroundColor: Colors.freshGreen,
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   disabled: {
-    backgroundColor: Colors.borderGray,
+    backgroundColor: Colors.lightGray,
   },
   disabledSecondary: {
     backgroundColor: 'transparent',
@@ -99,19 +99,19 @@ const styles = StyleSheet.create({
     ...Typography.buttonText,
   },
   text_primary: {
-    color: Colors.white,
+    color: Colors.background,
   },
   text_secondary: {
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
   },
   text_success: {
-    color: Colors.white,
+    color: Colors.background,
   },
   text_danger: {
     color: Colors.white,
   },
   text_ghost: {
-    color: Colors.electricBlue,
+    color: Colors.mediumGray,
   },
   textSize_small: {
     fontSize: 13,

@@ -32,6 +32,12 @@ export default function WelcomeScreen({ navigation }) {
       return;
     }
 
+    // Reviewer bypass: skip OTP send, navigate directly to code entry screen
+    if (trimmedEmail === 'reviewer@colum.edu') {
+      navigation.navigate('VerifyEmail', { email: trimmedEmail });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await signInWithOtp(trimmedEmail);
@@ -63,12 +69,12 @@ export default function WelcomeScreen({ navigation }) {
 
         {/* Email form */}
         <View style={styles.form}>
-          <Text style={styles.formLabel}>Enter your email {/* DEV: .edu check disabled */}</Text>
+          <Text style={styles.formLabel}>Enter your .edu email</Text>
           <TextInput
             style={[styles.input, email.length > 0 && !isValidEmail && styles.inputError]}
             value={email}
             onChangeText={setEmail}
-            placeholder="you@gmail.com"
+            placeholder="you@university.edu"
             placeholderTextColor={Colors.mediumGray}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -104,7 +110,7 @@ export default function WelcomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
@@ -119,7 +125,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     fontSize: 42,
     letterSpacing: 6,
-    color: Colors.electricBlue,
+    color: Colors.white,
     marginBottom: 8,
   },
   tagline: {
@@ -148,7 +154,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     ...Typography.body,
-    color: Colors.midnight,
+    color: Colors.white,
+    backgroundColor: Colors.lightGray,
     marginBottom: 8,
   },
   inputError: {

@@ -15,6 +15,11 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import Button from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
+
+const REVIEWER_EMAIL = 'reviewer@colum.edu';
+const REVIEWER_CODE = '12345678';
+const REVIEWER_PASSWORD = process.env.EXPO_PUBLIC_REVIEWER_PASSWORD;
 
 const CODE_LENGTH = 8;
 
@@ -51,6 +56,26 @@ export default function VerifyEmailScreen({ route, navigation }) {
 
   async function handleVerify() {
     if (!isComplete) return;
+
+    // Reviewer bypass: sign in directly with password, skip OTP verification
+    if (email === REVIEWER_EMAIL && fullCode === REVIEWER_CODE) {
+      setLoading(true);
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: REVIEWER_EMAIL,
+          password: REVIEWER_PASSWORD,
+        });
+        if (error) throw error;
+        // AuthContext onAuthStateChange handles navigation
+      } catch (error) {
+        Alert.alert('Invalid Code', 'The verification code is incorrect or expired. Please try again.');
+        setCode(['', '', '', '', '', '', '', '']);
+        inputRefs.current[0]?.focus();
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     setLoading(true);
     try {
@@ -138,7 +163,7 @@ export default function VerifyEmailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
@@ -161,7 +186,7 @@ const styles = StyleSheet.create({
   emailText: {
     ...Typography.body,
     fontFamily: 'Inter-SemiBold',
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
   },
   codeContainer: {
     flexDirection: 'row',
@@ -182,7 +207,7 @@ const styles = StyleSheet.create({
   },
   codeInputFilled: {
     borderColor: Colors.electricBlue,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   verifyButton: {
     marginBottom: 16,
@@ -193,7 +218,7 @@ const styles = StyleSheet.create({
   },
   resendText: {
     ...Typography.body,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
   },
   backButton: {
     alignItems: 'center',

@@ -56,9 +56,17 @@ export default function PostSessionScreen({ route, navigation }) {
   const [lookingFor, setLookingFor] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showCustomLocation, setShowCustomLocation] = useState(false);
+  const [locationSearch, setLocationSearch] = useState('');
 
   const school = profile?.school || 'Columbia';
   const locationPresets = LocationPresets[school]?.[category] || [];
+  const filteredLocations = locationSearch.trim()
+    ? locationPresets.filter(
+        (loc) =>
+          loc.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
+          loc.address.toLowerCase().includes(locationSearch.toLowerCase())
+      )
+    : locationPresets;
 
   const isValid =
     (selectedLocation || customLocation.trim().length > 2) && timeOffset && duration;
@@ -154,8 +162,18 @@ export default function PostSessionScreen({ route, navigation }) {
 
           {/* Where */}
           <Text style={styles.sectionLabel}>Where?</Text>
+          <TextInput
+            style={styles.searchInput}
+            value={locationSearch}
+            onChangeText={setLocationSearch}
+            placeholder="Search locations..."
+            placeholderTextColor={Colors.mediumGray}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+            accessibilityLabel="Search locations"
+          />
           <View style={styles.locationList}>
-            {locationPresets.map((loc) => (
+            {filteredLocations.map((loc) => (
               <TouchableOpacity
                 key={loc.name}
                 style={[
@@ -166,6 +184,7 @@ export default function PostSessionScreen({ route, navigation }) {
                   setSelectedLocation(loc);
                   setShowCustomLocation(false);
                   setCustomLocation('');
+                  setLocationSearch('');
                 }}>
                 <Text
                   style={[
@@ -174,16 +193,24 @@ export default function PostSessionScreen({ route, navigation }) {
                   ]}>
                   {loc.name}
                 </Text>
+                <Text
+                  style={[
+                    styles.locationItemAddress,
+                    selectedLocation?.name === loc.name && styles.locationItemAddressActive,
+                  ]}>
+                  {loc.address}
+                </Text>
               </TouchableOpacity>
             ))}
+            {filteredLocations.length === 0 && locationSearch.trim().length > 0 && (
+              <Text style={styles.noResults}>No locations match "{locationSearch}"</Text>
+            )}
             <TouchableOpacity
-              style={[
-                styles.locationItem,
-                showCustomLocation && styles.locationItemActive,
-              ]}
+              style={[styles.locationItem, showCustomLocation && styles.locationItemActive]}
               onPress={() => {
                 setShowCustomLocation(true);
                 setSelectedLocation(null);
+                setLocationSearch('');
               }}>
               <Text
                 style={[
@@ -250,7 +277,7 @@ export default function PostSessionScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
   },
   header: {
     flexDirection: 'row',
@@ -263,7 +290,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     ...Typography.body,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
   },
   title: {
     ...Typography.h3,
@@ -305,6 +332,17 @@ const styles = StyleSheet.create({
   optionChipTextActive: {
     color: Colors.white,
   },
+  searchInput: {
+    borderWidth: 1.5,
+    borderColor: Colors.borderGray,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    ...Typography.body,
+    color: Colors.midnight,
+    marginBottom: 8,
+    backgroundColor: Colors.lightGray,
+  },
   locationList: {
     gap: 8,
   },
@@ -318,15 +356,30 @@ const styles = StyleSheet.create({
   },
   locationItemActive: {
     borderColor: Colors.electricBlue,
-    backgroundColor: `${Colors.electricBlue}10`,
+    backgroundColor: Colors.lightGray,
   },
   locationItemText: {
     ...Typography.body,
     color: Colors.slateGray,
   },
   locationItemTextActive: {
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     fontFamily: 'Inter-SemiBold',
+  },
+  locationItemAddress: {
+    ...Typography.caption,
+    color: Colors.mediumGray,
+    marginTop: 2,
+  },
+  locationItemAddressActive: {
+    color: Colors.freshGreen,
+    opacity: 0.7,
+  },
+  noResults: {
+    ...Typography.bodySmall,
+    color: Colors.mediumGray,
+    textAlign: 'center',
+    paddingVertical: 8,
   },
   input: {
     borderWidth: 1.5,

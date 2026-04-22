@@ -29,7 +29,7 @@ const CATEGORIES = [
     id: 'study',
     emoji: '📚',
     title: 'STUDY SESSION',
-    subtitle: 'All-nighters are better together',
+    subtitle: 'Find your focus partner',
     color: CategoryColors.study,
   },
 ];
@@ -76,7 +76,7 @@ export default function CategorySelectScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
   },
   header: {
     flexDirection: 'row',
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     borderWidth: 2,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
     shadowColor: Colors.midnight,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,

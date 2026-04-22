@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { Typography } from '../../constants/typography';
 import Button from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserProfile, getPhotoUrl } from '../../api/users';
+import { supabase } from '../../lib/supabase';
 import { getCategoryEmoji } from '../../utils/school';
 import { formatDateTime } from '../../utils/time';
 import { getLevelInfo } from '../../utils/levels';
@@ -33,6 +34,27 @@ export default function ProfileScreen({ route, navigation }) {
 
   useEffect(() => {
     loadProfile();
+
+    if (!targetUserId) return;
+
+    // Real-time subscription: refresh when sessions or attendees change
+    const channel = supabase
+      .channel(`profile-activity-${targetUserId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sessions', filter: `created_by=eq.${targetUserId}` },
+        () => loadProfile()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'session_attendees', filter: `user_id=eq.${targetUserId}` },
+        () => loadProfile()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [targetUserId]);
 
   async function loadProfile() {
@@ -56,7 +78,7 @@ export default function ProfileScreen({ route, navigation }) {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={Colors.electricBlue} style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color={Colors.freshGreen} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
@@ -85,7 +107,7 @@ export default function ProfileScreen({ route, navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={Colors.electricBlue}
+            tintColor={Colors.freshGreen}
           />
         }>
         {/* Header */}
@@ -231,7 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   header: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     paddingHorizontal: 20,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -242,7 +264,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     ...Typography.body,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
   },
   headerTitle: {
     ...Typography.h3,
@@ -250,11 +272,11 @@ const styles = StyleSheet.create({
   },
   editText: {
     ...Typography.body,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
   },
   avatarSection: {
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     paddingTop: 24,
     paddingBottom: 20,
     borderBottomWidth: 1,
@@ -267,7 +289,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
     marginBottom: 12,
     borderWidth: 3,
-    borderColor: Colors.electricBlue,
+    borderColor: Colors.freshGreen,
   },
   avatarPlaceholder: {
     alignItems: 'center',
@@ -285,7 +307,7 @@ const styles = StyleSheet.create({
   },
   schoolBadge: {
     ...Typography.bodySmall,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     fontFamily: 'Inter-SemiBold',
   },
   levelBadge: {
@@ -312,7 +334,7 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
     padding: 16,
     marginTop: 8,
     borderRadius: 12,
@@ -337,7 +359,7 @@ const styles = StyleSheet.create({
     color: Colors.mediumGray,
   },
   section: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
     borderRadius: 12,
     marginHorizontal: 12,
     marginTop: 12,

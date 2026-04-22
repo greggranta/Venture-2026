@@ -89,15 +89,12 @@ export function NotificationProvider({ children }) {
 
     if (finalStatus !== 'granted') return null;
 
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId: '94921410-6f6f-4a2d-83cc-c8cbbac3d7aa' })).data;
     return token;
   }
 
   async function savePushToken(userId, token) {
-    await supabase
-      .from('users')
-      .update({ fcm_token: token })
-      .eq('id', userId);
+    await supabase.from('users').update({ fcm_token: token }).eq('id', userId);
   }
 
   async function fetchUnreadCount(userId) {

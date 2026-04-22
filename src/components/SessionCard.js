@@ -20,7 +20,7 @@ export default function SessionCard({ session, onJoin, onPress, isJoined = false
   const urgencyColor = getUrgencyColor(session.start_time);
   const timeDisplay = getTimeDisplay(session.start_time);
   const urgent = isUrgent(session.start_time);
-  const isFull = session.attendee_count >= session.looking_for;
+  const isFull = session.looking_for != null && session.attendee_count >= session.looking_for;
   const isOwn = session.created_by === userId;
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -140,17 +140,17 @@ export default function SessionCard({ session, onJoin, onPress, isJoined = false
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
     marginVertical: 6,
     borderLeftWidth: 4,
-    shadowColor: Colors.midnight,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   header: {
     flexDirection: 'row',
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.electricBlue,
+    backgroundColor: Colors.lightGray,
   },
   avatarInitial: {
     color: Colors.white,

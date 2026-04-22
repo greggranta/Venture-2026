@@ -198,7 +198,7 @@ export default function FeedScreen({ navigation }) {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.electricBlue} />
+          <ActivityIndicator size="large" color={Colors.freshGreen} />
         </View>
       ) : (
         <FlatList
@@ -220,7 +220,7 @@ export default function FeedScreen({ navigation }) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.electricBlue}
+              tintColor={Colors.freshGreen}
             />
           }
           showsVerticalScrollIndicator={false}
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   topBar: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     ...Typography.h2,
-    color: Colors.electricBlue,
+    color: Colors.white,
     letterSpacing: 3,
   },
   filterRow: {
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 8,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     marginBottom: 8,
   },
   filterChip: {
@@ -273,8 +273,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderGray,
   },
   filterChipActive: {
-    backgroundColor: Colors.electricBlue,
-    borderColor: Colors.electricBlue,
+    backgroundColor: Colors.freshGreen,
+    borderColor: Colors.freshGreen,
   },
   filterChipText: {
     ...Typography.bodySmall,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
   },
   filterChipTextActive: {
-    color: Colors.white,
+    color: Colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 20,
-    backgroundColor: Colors.warmCoral,
+    backgroundColor: Colors.brandPink,
     borderRadius: 28,
     paddingVertical: 14,
     paddingHorizontal: 22,

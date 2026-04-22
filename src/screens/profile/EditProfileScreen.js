@@ -166,7 +166,7 @@ export default function EditProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   changePhotoLabel: {
     ...Typography.caption,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     marginTop: 8,
   },
   label: {

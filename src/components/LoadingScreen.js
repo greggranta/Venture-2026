@@ -7,7 +7,7 @@ export default function LoadingScreen({ message = 'Loading...' }) {
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>VENTURE</Text>
-      <ActivityIndicator size="large" color={Colors.electricBlue} style={styles.spinner} />
+      <ActivityIndicator size="large" color={Colors.freshGreen} style={styles.spinner} />
       <Text style={styles.message}>{message}</Text>
     </View>
   );
@@ -16,13 +16,13 @@ export default function LoadingScreen({ message = 'Loading...' }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
     ...Typography.h1,
-    color: Colors.electricBlue,
+    color: Colors.white,
     letterSpacing: 4,
     marginBottom: 40,
   },

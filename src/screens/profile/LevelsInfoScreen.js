@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   header: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     paddingHorizontal: 20,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     ...Typography.body,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     width: 48,
   },
   headerTitle: {
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     borderRadius: 14,
     padding: 18,
     marginBottom: 20,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   earningAmount: {
     fontSize: 26,
     fontFamily: 'Inter-Bold',
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     marginBottom: 4,
   },
   earningLabel: {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   levelCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,

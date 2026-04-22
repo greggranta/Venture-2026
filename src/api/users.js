@@ -69,7 +69,8 @@ export async function getUserProfile(userId) {
     { data: activityCounts },
     { data: tokenBalance },
     { data: streak },
-    { data: recentSessions },
+    { data: createdSessions },
+    { data: joinedAttendeeRows },
   ] = await Promise.all([
     supabase.rpc('get_vibe_score', { input_user_id: userId }),
     supabase.rpc('get_activity_counts', { input_user_id: userId }),
@@ -78,11 +79,28 @@ export async function getUserProfile(userId) {
     supabase
       .from('sessions')
       .select('id, category, location, start_time, status')
-      .or(`created_by.eq.${userId}`)
+      .eq('created_by', userId)
       .in('status', ['expired', 'active'])
       .order('start_time', { ascending: false })
-      .limit(5),
+      .limit(10),
+    supabase
+      .from('session_attendees')
+      .select('sessions(id, category, location, start_time, status)')
+      .eq('user_id', userId),
   ]);
+
+  // Merge created + joined sessions, deduplicate, sort, take top 5
+  const joinedSessions = (joinedAttendeeRows || [])
+    .map((r) => r.sessions)
+    .filter(Boolean)
+    .filter((s) => ['expired', 'active'].includes(s.status));
+
+  const allSessions = [...(createdSessions || []), ...joinedSessions];
+  const seen = new Set();
+  const recentSessions = allSessions
+    .filter((s) => { if (seen.has(s.id)) return false; seen.add(s.id); return true; })
+    .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
+    .slice(0, 5);
 
   // Get rating counts
   const { count: totalMeetups } = await supabase

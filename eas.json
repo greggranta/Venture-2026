@@ -13,7 +13,12 @@
       "channel": "preview"
     },
     "production": {
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://pyufumndgdexpliyayqe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_xDb8SKtAfERvRxLeAqq-cw__ZwYDB9U",
+        "EXPO_PUBLIC_REVIEWER_PASSWORD": "Fiorano@24282428!!!!"
+      }
     }
   }
 }

@@ -54,7 +54,7 @@ function BadgeIcon({ count, children }) {
             position: 'absolute',
             top: -4,
             right: -8,
-            backgroundColor: Colors.warmCoral,
+            backgroundColor: Colors.brandPink,
             borderRadius: 8,
             minWidth: 16,
             height: 16,
@@ -78,13 +78,13 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.background,
           borderTopColor: Colors.borderGray,
           paddingBottom: 8,
           paddingTop: 8,
           height: 60,
         },
-        tabBarActiveTintColor: Colors.electricBlue,
+        tabBarActiveTintColor: Colors.freshGreen,
         tabBarInactiveTintColor: Colors.mediumGray,
         tabBarLabelStyle: {
           fontSize: 11,

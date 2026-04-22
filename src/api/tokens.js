@@ -23,7 +23,7 @@ export async function getTokenBalance(userId) {
   });
 
   if (error) throw error;
-  return data || 0;
+  return data ?? 0;
 }
 
 /**

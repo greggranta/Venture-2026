@@ -12,6 +12,7 @@ import {
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import {
   fetchNotifications,
   markNotificationRead,
@@ -19,6 +20,7 @@ import {
   getNotificationIcon,
 } from '../../api/notifications';
 import { getPendingRatings } from '../../api/ratings';
+import { supabase } from '../../lib/supabase';
 
 function timeAgo(dateStr) {
   const now = new Date();
@@ -37,13 +39,28 @@ function timeAgo(dateStr) {
 
 export default function NotificationsScreen({ navigation }) {
   const { user } = useAuth();
+  const { markRead } = useNotifications();
   const [notifications, setNotifications] = useState([]);
   const [pendingRatings, setPendingRatings] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
-  }, []);
+
+    if (!user) return;
+
+    // Real-time: pick up new notifications without pull-to-refresh
+    const channel = supabase
+      .channel(`notifications-screen-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => { loadData(); }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [user]);
 
   async function loadData() {
     if (!user) return;
@@ -53,6 +70,7 @@ export default function NotificationsScreen({ navigation }) {
     ]);
     setNotifications(notifs);
     setPendingRatings(ratings);
+    markRead(); // clear the badge once we've loaded the screen
   }
 
   const handleRefresh = useCallback(async () => {
@@ -87,6 +105,7 @@ export default function NotificationsScreen({ navigation }) {
   async function handleMarkAllRead() {
     await markAllNotificationsRead(user.id);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    markRead();
   }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -185,7 +204,7 @@ export default function NotificationsScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={Colors.electricBlue}
+            tintColor={Colors.freshGreen}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -200,7 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   header: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     paddingHorizontal: 20,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -214,7 +233,7 @@ const styles = StyleSheet.create({
   },
   markAllRead: {
     ...Typography.bodySmall,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
   },
   sectionHeader: {
     ...Typography.label,
@@ -228,13 +247,13 @@ const styles = StyleSheet.create({
   notifItem: {
     flexDirection: 'row',
     padding: 16,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderGray,
     alignItems: 'flex-start',
   },
   notifUnread: {
-    backgroundColor: `${Colors.electricBlue}06`,
+    backgroundColor: Colors.lightGray,
   },
   notifIconContainer: {
     width: 40,
@@ -253,7 +272,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.electricBlue,
+    backgroundColor: Colors.freshGreen,
   },
   notifContent: {
     flex: 1,
@@ -279,7 +298,7 @@ const styles = StyleSheet.create({
   },
   rateNow: {
     ...Typography.caption,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     fontFamily: 'Inter-SemiBold',
     marginLeft: 8,
     alignSelf: 'center',
@@ -287,15 +306,15 @@ const styles = StyleSheet.create({
   pendingRatingCard: {
     margin: 12,
     padding: 16,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.warmCoral,
-    shadowColor: Colors.midnight,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    borderLeftColor: Colors.brandPink,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   pendingRatingTitle: {
     ...Typography.body,
@@ -309,7 +328,7 @@ const styles = StyleSheet.create({
   },
   pendingRatingAction: {
     ...Typography.bodySmall,
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     fontFamily: 'Inter-SemiBold',
   },
   emptyState: {

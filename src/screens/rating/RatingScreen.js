@@ -195,7 +195,7 @@ function SuccessScreen({ tokensEarned, session, onDone }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
   },
   content: {
     padding: 24,
@@ -289,14 +289,14 @@ const styles = StyleSheet.create({
   },
   showedUpOptionActive: {
     borderColor: Colors.electricBlue,
-    backgroundColor: `${Colors.electricBlue}10`,
+    backgroundColor: Colors.lightGray,
   },
   showedUpOptionText: {
     ...Typography.body,
     color: Colors.slateGray,
   },
   showedUpOptionTextActive: {
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     fontFamily: 'Inter-SemiBold',
   },
   vibeSection: {
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   },
   vibeOptionActive: {
     borderColor: Colors.electricBlue,
-    backgroundColor: `${Colors.electricBlue}10`,
+    backgroundColor: Colors.lightGray,
   },
   vibeEmoji: {
     fontSize: 36,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   vibeLabelActive: {
-    color: Colors.electricBlue,
+    color: Colors.freshGreen,
     fontFamily: 'Inter-SemiBold',
   },
   submitButton: {
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   },
   successContainer: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.electricBlue,
   },
   successContent: {
     flex: 1,
