@@ -70,7 +70,8 @@
           "icon": "./assets/notification-icon.png",
           "color": "#FD4FE9"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {

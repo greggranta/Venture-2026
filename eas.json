@@ -14,10 +14,14 @@
     },
     "production": {
       "channel": "production",
+      "ios": {
+        "autoIncrement": true
+      },
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://pyufumndgdexpliyayqe.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_xDb8SKtAfERvRxLeAqq-cw__ZwYDB9U",
-        "EXPO_PUBLIC_REVIEWER_PASSWORD": "Fiorano@24282428!!!!"
+        "EXPO_PUBLIC_REVIEWER_PASSWORD": "Fiorano@24282428!!!!",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4ba5d4bcf70558e0f5e80681c2d4e76c@o4511265366999040.ingest.us.sentry.io/4511265369620480"
       }
     }
   }

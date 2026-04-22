@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Platform, InteractionManager } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+
+const PUSH_TOKEN_TIMEOUT_MS = 10000;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -24,11 +26,26 @@ export function NotificationProvider({ children }) {
   useEffect(() => {
     if (!user) return;
 
-    registerForPushNotificationsAsync().then((token) => {
-      if (token) {
-        setExpoPushToken(token);
-        savePushToken(user.id, token);
-      }
+    // Defer push token registration until after the main UI has rendered.
+    // Uses InteractionManager so it fires after all navigation animations settle.
+    // Wrapped in a hard timeout so a hung Exponent service never blocks the background.
+    const tokenTask = InteractionManager.runAfterInteractions(() => {
+      const tokenTimeout = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error('[PUSH_TOKEN] getExpoPushTokenAsync timed out')),
+          PUSH_TOKEN_TIMEOUT_MS
+        )
+      );
+      Promise.race([registerForPushNotificationsAsync(), tokenTimeout])
+        .then((token) => {
+          if (token) {
+            setExpoPushToken(token);
+            savePushToken(user.id, token);
+          }
+        })
+        .catch((err) => {
+          console.warn('[PUSH_TOKEN]', err.message);
+        });
     });
 
     notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
@@ -63,6 +80,7 @@ export function NotificationProvider({ children }) {
       .subscribe();
 
     return () => {
+      tokenTask.cancel();
       notificationListener.current?.remove();
       responseListener.current?.remove();
       supabase.removeChannel(channel);

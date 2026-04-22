@@ -1,36 +1,99 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+
+const LAUNCH_TIMEOUT_MS = 6000;
+
+function withLaunchTimeout(promise, label) {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error(`[LAUNCH_TIMEOUT] ${label} timed out after ${LAUNCH_TIMEOUT_MS}ms`)),
+      LAUNCH_TIMEOUT_MS
+    )
+  );
+  return Promise.race([promise, timeout]);
+}
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children, onRetry }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    }).catch((error) => {
-      console.error('Error getting session:', error);
-      setLoading(false);
-    });
+    cancelledRef.current = false;
 
-    // Listen for auth state changes
+    async function init() {
+      try {
+        // Step 1: fetch stored session with a hard timeout
+        const { data: { session: storedSession } } = await withLaunchTimeout(
+          supabase.auth.getSession(),
+          'getSession'
+        );
+
+        if (cancelledRef.current) return;
+
+        if (!storedSession) {
+          setLoading(false);
+          return;
+        }
+
+        // Step 2: if stored token is expired, attempt refresh before proceeding
+        const now = Math.floor(Date.now() / 1000);
+        let activeSession = storedSession;
+
+        if (storedSession.expires_at && storedSession.expires_at < now) {
+          try {
+            const { data: refreshData, error: refreshError } = await withLaunchTimeout(
+              supabase.auth.refreshSession(),
+              'refreshSession'
+            );
+            if (refreshError || !refreshData?.session) {
+              throw new Error(refreshError?.message ?? 'refresh returned no session');
+            }
+            activeSession = refreshData.session;
+          } catch (refreshErr) {
+            console.warn('[LAUNCH_TIMEOUT] Token refresh failed, clearing session:', refreshErr.message);
+            await supabase.auth.signOut();
+            if (!cancelledRef.current) setLoading(false);
+            return;
+          }
+        }
+
+        if (cancelledRef.current) return;
+
+        setSession(activeSession);
+        setUser(activeSession.user);
+
+        // Step 3: fetch profile with a hard timeout
+        await withLaunchTimeout(
+          fetchProfileInternal(activeSession.user.id),
+          'fetchProfile'
+        );
+      } catch (err) {
+        console.error('[LAUNCH_TIMEOUT] Launch init failed:', err.message);
+        // Clear any partial auth state so AppNavigator routes to Welcome
+        await supabase.auth.signOut();
+        if (!cancelledRef.current) {
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+          setLoading(false);
+        }
+      }
+    }
+
+    init();
+
+    // Post-launch: listen for auth state changes (sign-in / sign-out / token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfileInternal(session.user.id);
         } else {
           setProfile(null);
           setLoading(false);
@@ -38,10 +101,13 @@ export function AuthProvider({ children }) {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelledRef.current = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  async function fetchProfile(userId) {
+  async function fetchProfileInternal(userId) {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -50,11 +116,11 @@ export function AuthProvider({ children }) {
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      setProfile(data);
+      if (!cancelledRef.current) setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
-      setLoading(false);
+      if (!cancelledRef.current) setLoading(false);
     }
   }
 
@@ -89,7 +155,7 @@ export function AuthProvider({ children }) {
   }
 
   async function refreshProfile() {
-    if (user) await fetchProfile(user.id);
+    if (user) await fetchProfileInternal(user.id);
   }
 
   const value = {
@@ -101,6 +167,7 @@ export function AuthProvider({ children }) {
     verifyOtp,
     signOut,
     refreshProfile,
+    onRetry,
     isAuthenticated: !!user,
     hasProfile: !!profile,
   };
