@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import * as Sentry from '@sentry/react-native';
 import { supabase } from '../lib/supabase';
 
 const LAUNCH_TIMEOUT_MS = 6000;
@@ -27,55 +28,37 @@ export function AuthProvider({ children, onRetry }) {
 
     async function init() {
       try {
-        // Step 1: fetch stored session with a hard timeout
-        const { data: { session: storedSession } } = await withLaunchTimeout(
-          supabase.auth.getSession(),
-          'getSession'
+        // Step 1: force refresh unconditionally — never boot with a stale token
+        const { data: refreshData, error: refreshError } = await withLaunchTimeout(
+          supabase.auth.refreshSession(),
+          'refreshSession'
         );
 
         if (cancelledRef.current) return;
 
-        if (!storedSession) {
-          setLoading(false);
+        if (refreshError || !refreshData?.session) {
+          // Not logged in, or refresh token expired/revoked — route to login
+          if (!cancelledRef.current) {
+            setUser(null);
+            setProfile(null);
+            setSession(null);
+            setLoading(false);
+          }
           return;
         }
 
-        // Step 2: if stored token is expired, attempt refresh before proceeding
-        const now = Math.floor(Date.now() / 1000);
-        let activeSession = storedSession;
-
-        if (storedSession.expires_at && storedSession.expires_at < now) {
-          try {
-            const { data: refreshData, error: refreshError } = await withLaunchTimeout(
-              supabase.auth.refreshSession(),
-              'refreshSession'
-            );
-            if (refreshError || !refreshData?.session) {
-              throw new Error(refreshError?.message ?? 'refresh returned no session');
-            }
-            activeSession = refreshData.session;
-          } catch (refreshErr) {
-            console.warn('[LAUNCH_TIMEOUT] Token refresh failed, clearing session:', refreshErr.message);
-            await supabase.auth.signOut();
-            if (!cancelledRef.current) setLoading(false);
-            return;
-          }
-        }
-
-        if (cancelledRef.current) return;
-
+        const activeSession = refreshData.session;
         setSession(activeSession);
         setUser(activeSession.user);
 
-        // Step 3: fetch profile with a hard timeout
+        // Step 2: fetch profile with a hard timeout
         await withLaunchTimeout(
           fetchProfileInternal(activeSession.user.id),
           'fetchProfile'
         );
       } catch (err) {
         console.error('[LAUNCH_TIMEOUT] Launch init failed:', err.message);
-        // Clear any partial auth state so AppNavigator routes to Welcome
-        await supabase.auth.signOut();
+        if (!__DEV__) Sentry.captureException(err);
         if (!cancelledRef.current) {
           setUser(null);
           setSession(null);
@@ -87,19 +70,20 @@ export function AuthProvider({ children, onRetry }) {
 
     init();
 
-    // Post-launch: listen for auth state changes (sign-in / sign-out / token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfileInternal(session.user.id);
-        } else {
-          setProfile(null);
-          setLoading(false);
-        }
+    // Listen for auth state changes; init() owns the initial boot sequence
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (cancelledRef.current) return;
+      if (event === 'TOKEN_REFRESHED') {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+        setSession(null);
+      } else if (event === 'USER_UPDATED' && newSession?.user) {
+        fetchProfileInternal(newSession.user.id);
       }
-    );
+    });
 
     return () => {
       cancelledRef.current = true;
@@ -121,6 +105,45 @@ export function AuthProvider({ children, onRetry }) {
       console.error('Error fetching profile:', error);
     } finally {
       if (!cancelledRef.current) setLoading(false);
+    }
+  }
+
+  async function handleRetryInternal() {
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+    setLoading(true);
+
+    try {
+      const { data: refreshData, error: refreshError } = await withLaunchTimeout(
+        supabase.auth.refreshSession(),
+        'refreshSession-retry'
+      );
+
+      if (cancelledRef.current) return;
+
+      if (refreshError || !refreshData?.session) {
+        // Refresh failed — state already cleared, route to login
+        if (!cancelledRef.current) setLoading(false);
+        onRetry?.(); // force clean remount via App.js authKey bump
+        return;
+      }
+
+      const activeSession = refreshData.session;
+      setSession(activeSession);
+      setUser(activeSession.user);
+      await fetchProfileInternal(activeSession.user.id);
+      // Success — state restored in place; do NOT call onRetry (App.js signs out first)
+    } catch (err) {
+      console.error('[RETRY] Refresh failed:', err.message);
+      if (!__DEV__) Sentry.captureException(err);
+      if (!cancelledRef.current) {
+        setUser(null);
+        setProfile(null);
+        setSession(null);
+        setLoading(false);
+      }
+      onRetry?.(); // force clean remount via App.js authKey bump
     }
   }
 
@@ -167,7 +190,7 @@ export function AuthProvider({ children, onRetry }) {
     verifyOtp,
     signOut,
     refreshProfile,
-    onRetry,
+    onRetry: handleRetryInternal,
     isAuthenticated: !!user,
     hasProfile: !!profile,
   };

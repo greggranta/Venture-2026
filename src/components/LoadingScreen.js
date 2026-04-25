@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '../constants/colors';
 import { Typography } from '../constants/typography';
+import { useAuth } from '../contexts/AuthContext';
 
 // Phase transitions:
 //  0 →  2s  clean spinner, no text
@@ -14,7 +15,8 @@ const PHASES = [
   { delay: 8000, message: 'Taking longer than usual...' },
 ];
 
-export default function LoadingScreen({ onRetry }) {
+export default function LoadingScreen() {
+  const { onRetry } = useAuth();
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {

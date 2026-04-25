@@ -206,9 +206,9 @@ function AuthenticatedRoot() {
 }
 
 export default function AppNavigator() {
-  const { isAuthenticated, hasProfile, loading, onRetry } = useAuth();
+  const { isAuthenticated, hasProfile, loading } = useAuth();
 
-  if (loading) return <LoadingScreen onRetry={onRetry} />;
+  if (loading) return <LoadingScreen />;
 
   if (!isAuthenticated) return <AuthStack />;
   if (!hasProfile) {
